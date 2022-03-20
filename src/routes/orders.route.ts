@@ -14,6 +14,10 @@ import { Order } from "../models/order.model";
 import { Ticket } from "../models/ticket.model";
 
 import { natsWrapper } from "../nats.wrapper";
+import {
+  OrderCreatedPublisher,
+  OrderCancelledPublisher,
+} from "../events/publishers";
 
 const router: Router = express.Router();
 
@@ -28,7 +32,7 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
 });
 
 router.delete("/:orderId", requireAuth, async (req: Request, res: Response) => {
-  const order = await Order.findById(req.params.orderId);
+  const order = await Order.findById(req.params.orderId).populate("ticket");
   if (!order) {
     throw new NotFoundError();
   }
@@ -37,6 +41,14 @@ router.delete("/:orderId", requireAuth, async (req: Request, res: Response) => {
   }
   order.status = OrderStatus.CANCELLED;
   await order.save();
+
+  new OrderCancelledPublisher(natsWrapper.client).publish({
+    id: order.id,
+    ticket: {
+      id: order.ticket.id,
+    },
+  });
+
   res.status(204).send(order);
 });
 
@@ -94,6 +106,17 @@ router.post(
     });
 
     await order.save();
+
+    new OrderCreatedPublisher(natsWrapper.client).publish({
+      id: order.id,
+      status: order.status,
+      userId: order.userId,
+      expiresAt: order.expiresAt.toISOString(),
+      ticket: {
+        id: ticket.id,
+        price: ticket.price,
+      },
+    });
 
     res.status(201).send(order);
   }
