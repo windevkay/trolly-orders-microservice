@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 interface TicketAttrs {
+  id: string;
   title: string;
   price: number;
 }
@@ -38,7 +39,8 @@ const ticketSchema = new mongoose.Schema(
 );
 
 ticketSchema.statics.build = (attrs: TicketAttrs) => {
-  return new Ticket(attrs);
+  const { id, title, price } = attrs;
+  return new Ticket({ _id: id, title, price });
 };
 
 export const Ticket = mongoose.model<TicketDoc, TicketModel>(
