@@ -17,7 +17,7 @@
   "author": "Kola Adebayo",
   "license": "MIT",
   "dependencies": {
-    "@stagefirelabs/common": "^1.0.8",
+    "@stagefirelabs/common": "^1.0.9",
     "@types/cookie-session": "^2.0.42",
     "@types/express": "^4.17.11",
     "@types/jsonwebtoken": "^8.5.1",
@@ -30,6 +30,7 @@
     "express-validator": "^6.10.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.5",
+    "mongoose-update-if-current": "^1.4.0",
     "node-nats-streaming": "^0.3.2",
     "ts-node-dev": "^1.1.6",
     "typescript": "^4.2.4"

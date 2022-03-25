@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 
 import { OrderStatus } from "@stagefirelabs/common";
 
@@ -16,10 +17,15 @@ interface OrderDoc extends mongoose.Document {
   status: OrderStatus;
   expiresAt: Date;
   ticket: TicketDoc;
+  version: number;
 }
 
 interface OrderModel extends mongoose.Model<OrderDoc> {
   build(attrs: OrderAttrs): OrderDoc;
+  findByEvent(eventData: {
+    id: string;
+    version: number;
+  }): Promise<OrderDoc | null>;
 }
 
 const orderSchema = new mongoose.Schema(
@@ -52,6 +58,16 @@ const orderSchema = new mongoose.Schema(
     },
   }
 );
+orderSchema.set("versionKey", "version");
+orderSchema.plugin(updateIfCurrentPlugin);
+
+orderSchema.statics.findByEvent = (eventData: {
+  id: string;
+  version: number;
+}) => {
+  const { id, version } = eventData;
+  return Order.findOne({ _id: id, version: version - 1 });
+};
 
 orderSchema.statics.build = (attrs: OrderAttrs) => {
   return new Order(attrs);

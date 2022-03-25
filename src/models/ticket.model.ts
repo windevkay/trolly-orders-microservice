@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 
 interface TicketAttrs {
   id: string;
@@ -9,11 +10,16 @@ interface TicketAttrs {
 export interface TicketDoc extends mongoose.Document {
   title: string;
   price: number;
-  isReserved(): Promise<boolean>;
+  version: number;
+  //isReserved(): Promise<boolean>;
 }
 
 interface TicketModel extends mongoose.Model<TicketDoc> {
   build(attrs: TicketAttrs): TicketDoc;
+  findByEvent(eventData: {
+    id: string;
+    version: number;
+  }): Promise<TicketDoc | null>;
 }
 
 const ticketSchema = new mongoose.Schema(
@@ -37,6 +43,16 @@ const ticketSchema = new mongoose.Schema(
     },
   }
 );
+ticketSchema.set("versionKey", "version");
+ticketSchema.plugin(updateIfCurrentPlugin);
+
+ticketSchema.statics.findByEvent = (eventData: {
+  id: string;
+  version: number;
+}) => {
+  const { id, version } = eventData;
+  return Ticket.findOne({ _id: id, version: version - 1 });
+};
 
 ticketSchema.statics.build = (attrs: TicketAttrs) => {
   const { id, title, price } = attrs;
