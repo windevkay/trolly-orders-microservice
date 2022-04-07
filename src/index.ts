@@ -6,6 +6,7 @@ import { natsWrapper } from "./nats.wrapper";
 import {
   TicketCreatedListener,
   TicketUpdatedListener,
+  ExpirationCompleteListener,
 } from "./events/listeners";
 import { app } from "./app";
 
@@ -30,6 +31,7 @@ const runServer = async () => {
     // initialize listeners
     new TicketCreatedListener(natsWrapper.client).listen();
     new TicketUpdatedListener(natsWrapper.client).listen();
+    new ExpirationCompleteListener(natsWrapper.client).listen();
 
     await mongoose.connect(`${process.env.MONGO_URI}`, {
       useNewUrlParser: true,
